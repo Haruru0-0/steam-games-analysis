@@ -103,7 +103,14 @@ df = pd.read_parquet("data/processed/games.parquet")  # list columns survive int
 
 ## Data source
 
-Steam Games Dataset, from Kaggle. <!-- TODO: add the exact dataset URL --> The quirks documented above are properties of that scrape, not of Steam itself — notably the 20-tag ceiling and the ambiguous `price_status` values, both of which appear to be artifacts of how the data was collected rather than facts about the games.
+[Steam Games Dataset (daily updates)](https://www.kaggle.com/datasets/hubertsidorowicz/steam-games-dataset-daily-updates/data) by Hubert Sidorowicz, on Kaggle.
+
+The quirks documented above are properties of that scrape, not of Steam itself — notably the 20-tag ceiling and the ambiguous `price_status` values, both of which look like artifacts of how the data is collected rather than facts about the games.
+
+Two consequences of it being a **daily-updating** dataset worth knowing before you rerun any of this:
+
+- Every figure in this README describes one snapshot, dated 31 August 2026 (139,580 games). A fresh download will not reproduce them exactly, and the catalog only grows.
+- The scrape artifacts are pipeline behaviour rather than one bad export, so the 20-tag cap and the `unavailable` price status should still be there — but the row counts attached to them will have moved.
 
 ## Dashboard
 
