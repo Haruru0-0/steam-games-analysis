@@ -106,8 +106,20 @@ html, body, [class*="st-"], .stMarkdown, p, li, label, .stTabs, button, input, t
     font-family: '{BODY}', system-ui, sans-serif !important;
 }}
 
-/* Streamlit's own chrome is noise on a portfolio page. */
-[data-testid="stToolbar"], [data-testid="stDecoration"], footer {{ display: none; }}
+/* Streamlit's icons are ligatures in Material Symbols, so the font override
+   above turns them into their literal names ("keyboard_double_arrow_left").
+   They have to be handed their own font back. */
+[data-testid="stIconMaterial"], [class*="material-symbols"] {{
+    font-family: 'Material Symbols Rounded' !important;
+}}
+
+/* Hide only Streamlit's deploy branding. Hiding the whole stToolbar also takes
+   out the control that reopens a collapsed sidebar, stranding the filters, and
+   the overflow menu holds Rerun / Print / Settings that people expect. */
+[data-testid="stAppDeployButton"], [data-testid="stDecoration"], footer {{
+    display: none !important;
+}}
+[data-testid="stHeader"] {{ background: transparent; }}
 [data-testid="stAppViewContainer"] {{ background: {PAPER}; }}
 .block-container {{ padding-top: 2.6rem; max-width: 1180px; }}
 

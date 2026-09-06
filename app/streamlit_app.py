@@ -27,7 +27,12 @@ APP_COLUMNS = [
     "genres_count", "tags_count", "has_achievements",
 ]
 
-st.set_page_config(page_title="Steam Catalog", page_icon="◗", layout="wide")
+st.set_page_config(
+    page_title="Steam Catalog",
+    page_icon="◗",
+    layout="wide",
+    initial_sidebar_state="expanded",  # the filters are the point of the explore tab
+)
 theme.apply()
 
 
@@ -116,16 +121,34 @@ bands = alt.Chart(strip).mark_rect(stroke=theme.PAPER, strokeWidth=1.2).encode(
     ],
 )
 
-# Only the dominant band is labelled in place. Anything narrower overflows its
-# band at phone widths, and the rail below plus tooltips already carry the rest.
-# Ink rather than white: the light end of the ramp cannot carry white text.
-roomy = strip[strip["share"] > 25].copy()
-roomy["caption"] = roomy["label"] + "  " + roomy["share"].round(1).astype(str) + "%"
-labels = alt.Chart(roomy).mark_text(
-    align="center", baseline="middle", font=theme.MONO, fontSize=11, color=theme.INK,
-).encode(x=alt.X("mid:Q", scale=alt.Scale(domain=[0, 100], nice=False)), text="caption:N")
+# Labels are sized to the band, not to a guess about the viewport. `width` is a
+# live Vega signal, so band_px is each band's real pixel width and the labels
+# re-evaluate on resize: full text where there is room, percentage only where
+# there is less, nothing where a label would overflow into its neighbour.
+strip["percent"] = strip["share"].round(1).astype(str) + "%"
+strip["caption"] = strip["label"] + "  " + strip["percent"]
 
-st.altair_chart((bands + labels).properties(height=58), width="stretch")
+BAND_PX = "datum.share / 100 * width"
+x_mid = alt.X("mid:Q", title=None, axis=None, scale=alt.Scale(domain=[0, 100], nice=False))
+
+# Ink, not white: every band wide enough to hold a label sits at the light end
+# of the ramp, where white text would fall to roughly 1.9:1 contrast.
+text_mark = dict(align="center", baseline="middle", font=theme.MONO,
+                 fontSize=11, color=theme.INK)
+
+full_labels = alt.Chart(strip).mark_text(**text_mark).encode(
+    x=x_mid, text="caption:N",
+    opacity=alt.condition(f"{BAND_PX} > 115", alt.value(1), alt.value(0)),
+)
+short_labels = alt.Chart(strip).mark_text(**text_mark).encode(
+    x=x_mid, text="percent:N",
+    opacity=alt.condition(f"{BAND_PX} > 115 || {BAND_PX} < 46", alt.value(0), alt.value(1)),
+)
+
+st.altair_chart(
+    (bands + full_labels + short_labels).properties(height=58, width="container"),
+    width="stretch",
+)
 
 st.markdown(
     '<div class="stripnote"><span>banded by audience reached · width is share of '
